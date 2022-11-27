@@ -1,4 +1,83 @@
 
+let cssProperties = [
+    newCssProp('Width', 'width', 0, 'px', ['px', '%']),
+    newCssProp('Height', 'height', 0, 'px', ['px', '%']),
+    newCssProp('X', 'left', 0),
+    newCssProp('Y', 'top', 0),
+    newCssProp('Layer', 'zIndex', 0),
+    newCssProp('Rotate', 'rotate', 0, 'deg'),
+    newCssProp('Border Radius', 'borderRadius', 0, '%', ['px', '%'], [],
+        [
+            'Top Left=borderTopLeftRadius',
+            'Top Right=borderTopRightRadius',
+            'Bottom Left=borderBottomLeftRadius',
+            'Bottom Right=borderBottomRightRadius'
+        ]),
+    newCssProp('Border Width', 'borderWidth', 0, 'px', ['px'], [],
+        [
+            'Top=borderTopWidth',
+            'Bottom=borderBottomWidth',
+            'Left=borderLeftWidth',
+            'Right=borderRightWidth'
+        ]),
+    newCssProp('Border Style', 'borderStyle', 'solid', '', ['px'], ['solid', 'dashed', 'dotted', 'double', 'groove'],
+        [
+            'Top=borderTopStyle',
+            'Bottom=borderBottomStyle',
+            'Left=borderLeftStyle',
+            'Right=borderRightStyle'
+        ])
+];
+
+function newCssProp(label, name, value, unity = '', units = [], values = [], subprops = []) {
+    return { label, name, value, unity, units, values, subprops }
+}
+
+function newStyleProp(name, value, unity = '') {
+    return { name, value, unity };
+}
+
+let allCssProperties;
+
+function getAllCssProps() {
+    if (allCssProperties) {
+        return allCssProperties;
+    }
+    let list = [];
+    cssProperties.forEach(p => {
+        list.push(p);
+        if (!p.subprops) {
+            return;
+        }
+        let subprops = getCssSubproperties(p);
+        subprops.forEach(sp => list.push(sp));
+    });
+    allCssProperties = list;
+    return list;
+}
+
+function getCssSubproperties(prop) {
+    if (!prop || !prop.subprops) {
+        return [];
+    }
+    return prop.subprops.map(name => {
+        let label = name;
+        if (name.includes('=')) {
+            label = name.split('=')[0].trim();
+            name = name.split('=')[1].trim();
+        }
+        return {
+            label,
+            name,
+            value: prop.value,
+            unity: prop.unity,
+            units: prop.units,
+            values: prop.values
+        }
+    });
+}
+
+
 let divId = 0;
 let divList = [];
 
@@ -21,13 +100,7 @@ let defaultStyle = [
 ];
 
 function getDefaultStyle() {
-    return defaultStyle.map(prop => {
-        return {
-            name: prop.name,
-            value: prop.value,
-            unity: prop.unity
-        }
-    });
+    return defaultStyle.map(prop => { return { ...prop } });
 }
 
 function selectDiv(id) {
@@ -68,7 +141,13 @@ function verifyPropertyEditorValues() {
 }
 
 function selectAll() {
-    divList.forEach(obj => selectDiv(obj.id));
+    if (selectedDivsId.length == 0
+        || selectedDivsId.length == divList.length) {
+        divList.forEach(obj => selectDiv(obj.id));
+        return;
+    }
+    divList.filter(obj => !selectedDivsId.find(id => obj.id == id))
+        .forEach(obj => selectDiv(obj.id));
 }
 
 function deleteDivs() {
@@ -94,13 +173,8 @@ function newDivObj() {
     let docXY = getDocumentXY();
     let x = docXY.x + 30;
     let y = docXY.y + 30;
-    let selectedStyle = getDefaultStyle();
-    if (selectedDivsId.length == 1) {
-        selectedStyle = [...divList.find(o => o.id == selectedDivsId[0]).style];
-        selectedStyle = selectedStyle.filter(p => p.name != 'left' && p.name != top && p.name != 'zIndex');
-    }
     let style = [
-        ...selectedStyle,
+        ...getDefaultStyle(),
         newStyleProp('left', x, 'px'),
         newStyleProp('top', y, 'px'),
         newStyleProp('zIndex', id)
@@ -118,8 +192,7 @@ function newBlock() {
 
 function newCircle() {
     let divobj = newDivObj();
-    if (!divobj.style.find(p => p.name == 'borderRadius'))
-        divobj.style.push(newStyleProp('borderRadius', 50, '%'));
+    divobj.style.push(newStyleProp('borderRadius', 50, '%'));
     let div = createDiv(divobj);
     document.getElementById("container").appendChild(div);
 }
@@ -127,8 +200,7 @@ function newCircle() {
 function newVLine() {
     let divobj = newDivObj();
     divobj.style.find(p => p.name == 'width').value = 0;
-    if (!divobj.style.find(p => p.name == 'borderWidth'))
-        divobj.style.push(newStyleProp('borderWidth', 2, 'px'));
+    divobj.style.push(newStyleProp('borderWidth', 2, 'px'));
     let div = createDiv(divobj);
     document.getElementById("container").appendChild(div);
 }
@@ -136,9 +208,23 @@ function newVLine() {
 function newHLine() {
     let divobj = newDivObj();
     divobj.style.find(p => p.name == 'height').value = 0;
-    if (!divobj.style.find(p => p.name == 'borderWidth'))
-        divobj.style.push(newStyleProp('borderWidth', 2, 'px'));
+    divobj.style.push(newStyleProp('borderWidth', 2, 'px'));
     let div = createDiv(divobj);
+    document.getElementById("container").appendChild(div);
+}
+
+function copy() {
+    selectedDivsId.forEach(id => copyDiv(id));
+}
+
+function copyDiv(id) {
+    let obj = divList.find(o => o.id == id);
+    if (!obj) {
+        return;
+    }
+    let newObj = { id: nextId(), style: obj.style.map(p => { return { ...p } }) };
+    divList.push(newObj);
+    let div = createDiv(newObj);
     document.getElementById("container").appendChild(div);
 }
 
@@ -227,77 +313,10 @@ function getDocumentXY() {
     return { x, y };
 }
 
-let cssProperties = [
-    newCssProp('Width', 'width', 0, 'px', ['px', '%']),
-    newCssProp('Height', 'height', 0, 'px', ['px', '%']),
-    newCssProp('Layer', 'zIndex', 0),
-    newCssProp('Rotate', 'rotate', 0, 'deg'),
-    newCssProp('Border Radius', 'borderRadius', 0, '%', ['px', '%'], [],
-        [
-            'Top Left=borderTopLeftRadius',
-            'Top Right=borderTopRightRadius',
-            'Bottom Left=borderBottomLeftRadius',
-            'Bottom Right=borderBottomRightRadius'
-        ]),
-    newCssProp('Border Width', 'borderWidth', 0, 'px', ['px'], [],
-        [
-            'Top=borderTopWidth',
-            'Bottom=borderBottomWidth',
-            'Left=borderLeftWidth',
-            'Right=borderRightWidth'
-        ]),
-    newCssProp('Border Style', 'borderStyle', 'solid', '', ['px'], ['solid', 'dashed', 'dotted', 'double', 'groove'],
-        [
-            'Top=borderTopStyle',
-            'Bottom=borderBottomStyle',
-            'Left=borderLeftStyle',
-            'Right=borderRightStyle'
-        ])
-];
-
-let allCssProperties;
-
-function getAllCssProps() {
-    if (allCssProperties) {
-        return allCssProperties;
-    }
-    let list = [];
-    cssProperties.forEach(p => {
-        list.push(p);
-        if (!p.subprops) {
-            return;
-        }
-        let subprops = getCssSubproperties(p);
-        subprops.forEach(sp => list.push(sp));
-    });
-    allCssProperties = list;
-    return list;
-}
-
-function getCssSubproperties(prop) {
-    if (!prop || !prop.subprops) {
-        return [];
-    }
-    return prop.subprops.map(name => {
-        let label = name;
-        if (name.includes('=')) {
-            label = name.split('=')[0].trim();
-            name = name.split('=')[1].trim();
-        }
-        return {
-            label,
-            name,
-            value: prop.value,
-            unity: prop.unity,
-            units: prop.units,
-            values: prop.values
-        }
-    });
-}
-
 function generatePropertyEditor() {
+    cssProperties.forEach(prop => prop.htmlElement = generateEditorProperty(prop));
     let editor = document.getElementById('cssPropertyEditor');
-    cssProperties.forEach(prop => editor.appendChild(generateEditorProperty(prop)));
+    cssProperties.forEach(prop => editor.appendChild(prop.htmlElement));
 }
 
 function generateEditorProperty(prop) {
@@ -440,7 +459,8 @@ function setValuesOnCssEditor(style) {
     });
 }
 
-let colors = ['rgb(0, 0, 0, 0)', 'black', 'white', 'gray', 'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'magenta'];
+let colors = ['rgb(0, 0, 0, 0)', 'black', 'white', 'gray', 'red', 'orange', 'yellow', 'green', 'cyan',
+    'blue', 'magenta', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
 
 function generateColorTab() {
     let tab = document.getElementById('colorsTab');
@@ -450,19 +470,34 @@ function generateColorTab() {
 }
 
 function generateColorTabItem(idx, color) {
-    let div = newColorDiv(color, 20);
-    div.onclick = (ev) => fireColor(idx);
-    return div;
+    let btn = newColorButton(color, 20);
+    btn.id = 'btn-color_' + idx;
+    btn.onclick = (ev) => { fireColor(idx); selectColor(idx) };
+    return btn;
 }
 
 function fireColor(idx) {
     let color = colors[idx];
+    applyColor(color);
+}
+
+function applyInputColor() {
+    let color = document.getElementById('ipt-color').value;
+    if (selectedColor) {
+        colors[selectedColor] = color;
+        let btn = document.getElementById('btn-color_' + selectedColor);
+        btn.style.backgroundColor = color;
+    }
+    applyColor(color);
+}
+
+function applyColor(color) {
     let type = getSelectedOption(document.getElementById('colorType'));
     selectedDivsId.forEach(id => {
         let obj = divList.find(o => o.id == id);
         let prop = obj.style.find(p => p.name == type);
         if (!prop) {
-            prop = {name: type, unity: ''};
+            prop = { name: type, unity: '' };
             obj.style.push(prop);
         }
         prop.value = color;
@@ -471,15 +506,36 @@ function fireColor(idx) {
     });
 }
 
-function newColorDiv(color, size) {
-    let div = document.createElement('button');
-    div.style.width = size + 'px';
-    div.style.height = size + 'px';
-    div.style.backgroundColor = color;
-    div.style.border = '1px solid black';
-    div.style.borderRadius = '20%';
-    div.className = 'color-div';
-    return div;
+let selectedColor = 0;
+
+function selectColor(idx) {
+    if (!idx) {
+        return;
+    }
+    let btn = document.getElementById('btn-color_' + idx);
+    if (idx == selectedColor) {
+        selectedColor = 0;
+        btn.style.border = '2px solid black';
+        return;
+    }
+    selectedColor = idx;
+    btn.style.border = '2px solid red';
+    Object.keys(colors).filter(c => c != idx)
+        .forEach(c => {
+            let btnc = document.getElementById('btn-color_' + c);
+            btnc.style.border = '2px solid black';
+        });
+}
+
+function newColorButton(color, size) {
+    let btn = document.createElement('button');
+    btn.style.width = size + 'px';
+    btn.style.height = size + 'px';
+    btn.style.backgroundColor = color;
+    btn.style.border = '2px solid black';
+    btn.style.borderRadius = '20%';
+    btn.className = 'color-button';
+    return btn;
 }
 
 function newSelectElement(options) {
@@ -520,14 +576,6 @@ function getSelectedOption(select) {
     return option.value;
 }
 
-function newCssProp(label, name, value, unity = '', units = [], values = [], subprops = []) {
-    return { label, name, value, unity, units, values, subprops }
-}
-
-function newStyleProp(name, value, unity = '') {
-    return { name, value, unity };
-}
-
 function applyStyle(div, props) {
     if (!props || !Array.isArray(props)) {
         return;
@@ -540,4 +588,25 @@ function applyStyleProp(div, prop) {
         return;
     }
     div.style[prop.name] = prop.value + (prop.unity ? prop.unity : '');
+}
+
+function filterProperty() {
+    let text = document.getElementById('ipt-search').value;
+    setCssPropertiesVisible(cssProperties);
+    if (!text || !text.trim()) {
+        return;
+    }
+    setCssPropertiesVisible(cssProperties.filter(p => includesWords(p.label, text)));
+}
+
+function setCssPropertiesVisible(properties) {
+    let editor = document.getElementById('cssPropertyEditor');
+    editor.innerHTML = '';
+    properties.forEach(cssprop => editor.appendChild(cssprop.htmlElement));
+}
+
+function includesWords(text1, text2) {
+    let arr1 = text1.split(' ').map(w => w.trim().toUpperCase());
+    let arr2 = text2.split(' ').map(w => w.trim().toUpperCase());
+    return !arr2.find(w2 => !arr1.find(w1 => w1.includes(w2)));
 }

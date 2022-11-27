@@ -18,16 +18,16 @@
                 <button onclick="newCircle()">New Circle</button>
                 <button onclick="newVLine()">New V Line</button>
                 <button onclick="newHLine()">New H Line</button>
+                <button onclick="copy()">Copy</button>
                 <button onclick="selectAll()">Selecte All</button>
                 <button onclick="deleteDivs()">Delete Selecteds</button>
             </div>
             <div id="colorsTab" class="colors-tab">
-                <div>
-                    <select id="colorType">
-                        <option value="backgroundColor">Contents</option>
-                        <option value="borderColor">Border</option>
-                    </select>
-                </div>
+                <select id="colorType">
+                    <option value="backgroundColor">Contents</option>
+                    <option value="borderColor">Border</option>
+                </select>
+                <input type="color" id="ipt-color" onchange="applyInputColor()">
             </div>
             <div class="move-div">
                 <label>Move</label>
@@ -50,6 +50,10 @@
     <div class="main">
         <div class="tollbar">
             <h3>Property Editor</h3>
+            <div class="pn-search">
+                <label>Search</label>
+                <input id="ipt-search" onkeyup="filterProperty()">
+            </div>
             <div id="cssPropertyEditor" class="css-property-editor">
             </div>
         </div>

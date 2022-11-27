@@ -11,7 +11,7 @@ body {
 
 .controlbar {
     width: calc(100% - 10px);
-    height: calc(15vh - 12px);
+    height: 88px;
     border-bottom: 2px solid gray;
     padding: 5px;
     display: flex;
@@ -33,15 +33,23 @@ body {
 }
 
 .tollbar {
-    height: calc(85vh - 10px);
-    width: calc(15vw - 12px);
+    height: calc(100vh - 110px);
+    width: 163px;
     border-right: 2px solid gray;
     padding: 5px;
 }
 
+.pn-search {
+    margin-bottom: 10px;
+}
+
+.pn-search > input {
+    width: 120px;
+}
+
 .container {
-    width: 85vw;
-    height: 85vh;
+    width: calc(100vw - 170px);
+    height: calc(100vh - 110px);
 }
 
 .colors-tab {
@@ -49,12 +57,13 @@ body {
     margin-bottom: 5px;
 }
 
-.controls {
-    margin-bottom: 5px;
+.colors-tab > input, select, .color-button {
+    height: 20px;
+    margin-right: 5px;
 }
 
-.color-div {
-    margin-left: 5px;
+.controls {
+    margin-bottom: 5px;
 }
 
 [draggable] {
@@ -105,7 +114,7 @@ body {
     display: block;
     border-left: 2px solid gray;
     padding-left: 5px;
-    height: 100px;
+    height: 150px;
     overflow: auto;
 }
 
