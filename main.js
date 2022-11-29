@@ -13,14 +13,14 @@ let cssProperties = [
             'Bottom Left=borderBottomLeftRadius',
             'Bottom Right=borderBottomRightRadius'
         ]),
-    newCssProp('Border Width', 'borderWidth', 0, 'px', ['px'], [],
+    newCssProp('Border Width', 'borderWidth', 0, 'px', [], [],
         [
             'Top=borderTopWidth',
             'Bottom=borderBottomWidth',
             'Left=borderLeftWidth',
             'Right=borderRightWidth'
         ]),
-    newCssProp('Border Style', 'borderStyle', 'solid', '', ['px'], ['solid', 'dashed', 'dotted', 'double', 'groove'],
+    newCssProp('Border Style', 'borderStyle', 'solid', '', [], ['solid', 'dashed', 'dotted', 'double', 'groove'],
         [
             'Top=borderTopStyle',
             'Bottom=borderBottomStyle',
@@ -114,18 +114,13 @@ function selectDiv(id) {
     if (selectedDivsId.includes(id)) {
         selectedDivsId = selectedDivsId.filter(sid => sid != id);
         let obj = divList.find(o => o.id == id);
-        let prop = obj.style.find(p => p.name == 'backgroundColor');
-        if (!prop) {
-            div.style.backgroundColor = null;
-            verifyPropertyEditorValues();
-            return;
-        }
-        div.style.backgroundColor = prop.value;
+        let prop = obj.style.find(p => p.name == 'boxShadow');
+        div.style.boxShadow = prop ? prop.value : null;
         verifyPropertyEditorValues();
         return;
     }
     selectedDivsId.push(id);
-    div.style.backgroundColor = selectionColor;
+    div.style.boxShadow = '0px 0px 10px 5px cyan';
     verifyPropertyEditorValues();
 }
 
@@ -363,13 +358,6 @@ function generateEditorProperty(prop) {
         selectOption(select, prop.unity);
         valuesDiv.appendChild(select);
         select.onchange = () => fireCssProperty(select.id, prop.name, 'select', true);
-    } else if (prop.unity) {
-        let input = document.createElement('input');
-        input.id = main.id + "_inputUnity";
-        input.className = "css-prop-input-unt";
-        input.value = prop.unity;
-        valuesDiv.appendChild(input);
-        input.onchange = () => fireCssProperty(input.id, prop.name, 'input', true);
     }
     if (!prop.subprops || prop.subprops.length < 1) {
         return main;
@@ -460,7 +448,7 @@ function setValuesOnCssEditor(style) {
 }
 
 let colors = ['rgb(0, 0, 0, 0)', 'black', 'white', 'gray', 'red', 'orange', 'yellow', 'green', 'cyan',
-    'blue', 'magenta', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
+    'blue', 'magenta', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
 
 function generateColorTab() {
     let tab = document.getElementById('colorsTab');
